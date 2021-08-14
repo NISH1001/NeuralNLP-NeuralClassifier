@@ -17,13 +17,12 @@ def main():
     checkpoint_dir = "checkpoint_dir_custom/"
     dict_dir = "data/earth-science/dict_dir/"
     cfgpath = "data/earth-science/conf.json"
+    logfile = "data/earth-science/log.txt"
 
     keywords = taxonomy.load_keywords(kw_path)
     taxonomy.generate_taxonomy(keywords, taxonomy_path)
 
     df = datatools.load_data(data_path)
-    keywords_str = df["keywords"]
-
     df = datatools.standardize_data(df)
     logger.debug(df.head())
     logger.debug(df.iloc[0])
@@ -53,6 +52,7 @@ def main():
             "num_epochs": 50,
             "dict_dir": dict_dir,
             "device": "cpu",
+            "logfile": logfile,
         },
         cfgpath=cfgpath,
     )

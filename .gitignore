@@ -13,6 +13,7 @@ data/
 *.png
 *.ipynb
 log.txt
+probs.txt
 
 # vim
 *.swp
