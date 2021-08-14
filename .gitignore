@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+checkpoint_dir_custom/
 tmp/
 temp/
 data/
@@ -11,6 +12,7 @@ data/
 *.jpeg
 *.png
 *.ipynb
+log.txt
 
 # vim
 *.swp

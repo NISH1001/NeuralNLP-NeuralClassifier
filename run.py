@@ -3,15 +3,22 @@
 from loguru import logger
 from sklearn.model_selection import train_test_split
 
-from misc import datatools, taxonomy
+from misc import cfg, datatools, taxonomy
 
 
 def main():
     kw_path = "data/earth-science/keywords.txt"
     data_path = "data/earth-science/data.csv"
 
-    keywords = taxonomy.load_keywords(kw_path)
+    train_path = "data/earth-science/train.hierar.json"
+    val_path = "data/earth-science/val.hierar.json"
+    test_path = "data/earth-science/test.hierar.json"
     taxonomy_path = "data/earth-science/custom.taxonomy"
+    checkpoint_dir = "checkpoint_dir_custom/"
+    dict_dir = "data/earth-science/dict_dir/"
+    cfgpath = "data/earth-science/conf.json"
+
+    keywords = taxonomy.load_keywords(kw_path)
     taxonomy.generate_taxonomy(keywords, taxonomy_path)
 
     df = datatools.load_data(data_path)
@@ -30,9 +37,25 @@ def main():
     )
 
     _ = datatools.generate_data(df, "data/earth-science/data.hierar.json")
-    _ = datatools.generate_data(data_train, "data/earth-science/train.hierar.json")
-    _ = datatools.generate_data(data_val, "data/earth-science/val.hierar.json")
-    _ = datatools.generate_data(data_test, "data/earth-science/test.hierar.json")
+    _ = datatools.generate_data(data_train, train_path)
+    _ = datatools.generate_data(data_val, val_path)
+    _ = datatools.generate_data(data_test, test_path)
+
+    cfg.generate_cfg(
+        {
+            "trainpath": train_path,
+            "testpath": test_path,
+            "valpath": val_path,
+            "taxonomy": taxonomy_path,
+            "checkpoint_dir": checkpoint_dir,
+            "model": "Transformer",
+            "batch_size": 64,
+            "num_epochs": 50,
+            "dict_dir": dict_dir,
+            "device": "cpu",
+        },
+        cfgpath=cfgpath,
+    )
 
 
 if __name__ == "__main__":
