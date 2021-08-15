@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#coding:utf-8
+# coding:utf-8
 """
 Tencent is pleased to support the open source community by making NeuralClassifier available.
 Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -17,9 +17,7 @@ import os
 
 import torch
 
-from util import Logger
-from util import ModeType
-from util import Type
+from util import Logger, ModeType, Type
 
 
 class InsertVocabMode(Type):
@@ -33,18 +31,18 @@ class InsertVocabMode(Type):
     * `SUM`: Sum mode, return tensor shape will be
     *        [batch_size, embedding_size]
     """
-    ALL = 'all'
-    LABEL = 'label'
-    OTHER = 'other'
+
+    ALL = "all"
+    LABEL = "label"
+    OTHER = "other"
 
     def str(self):
-        return ",".join(
-            [self.ALL, self.LABEL, self.OTHER])
+        return ",".join([self.ALL, self.LABEL, self.OTHER])
 
 
 class DatasetBase(torch.utils.data.dataset.Dataset):
-    """Base dataset class
-    """
+    """Base dataset class"""
+
     CLASSIFICATION_LABEL_SEPARATOR = "--"
     CHARSET = "utf-8"
 
@@ -54,8 +52,7 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
 
     BIG_VALUE = 1000 * 1000 * 1000
 
-    def __init__(self, config, json_files, generate_dict=False,
-                 mode=ModeType.EVAL):
+    def __init__(self, config, json_files, generate_dict=False, mode=ModeType.EVAL):
         """
         Another way to do this is keep the file handler. But when DataLoader's
             num_worker bigger than 1, error will occur.
@@ -105,8 +102,10 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
             _insert_vocab(vocab_json_files, mode)
 
             if self.config.data.generate_dict_using_all_json_files:
-                vocab_json_files += self.config.data.validate_json_files + \
-                                    self.config.data.test_json_files
+                vocab_json_files += (
+                    self.config.data.validate_json_files
+                    + self.config.data.test_json_files
+                )
                 _insert_vocab(vocab_json_files, InsertVocabMode.OTHER)
 
             if self.config.data.generate_dict_using_pretrained_embedding:
@@ -136,8 +135,7 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
         return self._get_vocab_id_list(json.loads(json_str))
 
     def _init_dict(self):
-        """Init all dict
-        """
+        """Init all dict"""
         raise NotImplementedError
 
     def _save_dict(self, dict_name=None):
@@ -174,8 +172,9 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
         else:
             dict_idx = self.dict_names.index(dict_name)
             if not os.path.exists(self.dict_files[dict_idx]):
-                self.logger.warn("Not exists %s for %s" % (
-                    self.dict_files[dict_idx], dict_name))
+                self.logger.warn(
+                    "Not exists %s for %s" % (self.dict_files[dict_idx], dict_name)
+                )
             else:
                 dict_map = self.dicts[dict_idx]
                 id_to_vocab_dict_map = self.id_to_vocab_dict_list[dict_idx]
@@ -186,7 +185,7 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
                     id_to_vocab_dict_map[0] = self.VOCAB_PADDING
                     id_to_vocab_dict_map[1] = self.VOCAB_UNKNOWN
                     id_to_vocab_dict_map[2] = self.VOCAB_PADDING_LEARNABLE
-                
+
                     for line in open(self.dict_files[dict_idx], "r"):
                         vocab = line.strip("\n").split("\t")
                         dict_idx = len(dict_map)
@@ -199,26 +198,29 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
                         dict_idx = len(dict_map)
                         dict_map[vocab[0]] = dict_idx
                         id_to_vocab_dict_map[dict_idx] = vocab[0]
-                    
-                        k_level = len(vocab[0].split(self.CLASSIFICATION_LABEL_SEPARATOR))
+
+                        k_level = len(
+                            vocab[0].split(self.CLASSIFICATION_LABEL_SEPARATOR)
+                        )
                         if k_level not in hierarchy_dict:
                             hierarchy_dict[k_level] = [vocab[0]]
                         else:
                             hierarchy_dict[k_level].append(vocab[0])
-                    sorted_hierarchy_dict = sorted(hierarchy_dict.items(), key=lambda r: r[0])
+                    sorted_hierarchy_dict = sorted(
+                        hierarchy_dict.items(), key=lambda r: r[0]
+                    )
                     for _, level_dict in sorted_hierarchy_dict:
                         self.hierarchy_classes.append(len(level_dict))
 
-    def _load_pretrained_dict(self, dict_name=None,
-                              pretrained_file=None, min_count=0):
-        """Use pretrained embedding to generate dict
-        """
+    def _load_pretrained_dict(self, dict_name=None, pretrained_file=None, min_count=0):
+        """Use pretrained embedding to generate dict"""
         if dict_name is None:
             for i, _ in enumerate(self.pretrained_dict_names):
                 self._load_pretrained_dict(
                     self.pretrained_dict_names[i],
                     self.pretrained_dict_files[i],
-                    self.pretrained_min_count[i])
+                    self.pretrained_min_count[i],
+                )
 
         else:
             if pretrained_file is None or pretrained_file == "":
@@ -227,7 +229,7 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
             dict_map = self.dicts[index]
             with open(pretrained_file) as fin:
                 for line in fin:
-                    data = line.strip().split(' ')
+                    data = line.strip().split(" ")
                     if len(data) == 2:
                         continue
                     if data[0] not in dict_map:
@@ -235,8 +237,7 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
                     dict_map[data[0]] += min_count + 1
 
     def _insert_vocab(self, json_obj, mode=InsertVocabMode.ALL):
-        """Insert vocab to dict
-        """
+        """Insert vocab to dict"""
         raise NotImplementedError
 
     def _shrink_dict(self, dict_name=None):
@@ -245,16 +246,17 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
                 self._shrink_dict(name)
         else:
             dict_idx = self.dict_names.index(dict_name)
-            self.count_list[dict_idx] = sorted(self.dicts[dict_idx].items(),
-                                               key=lambda x: (x[1], x[0]),
-                                               reverse=True)
-            self.count_list[dict_idx] = \
-                [(k, v) for k, v in self.count_list[dict_idx] if
-                 v >= self.min_count[dict_idx]][0:self.max_dict_size[dict_idx]]
-    
+            self.count_list[dict_idx] = sorted(
+                self.dicts[dict_idx].items(), key=lambda x: (x[1], x[0]), reverse=True
+            )
+            self.count_list[dict_idx] = [
+                (k, v)
+                for k, v in self.count_list[dict_idx]
+                if v >= self.min_count[dict_idx]
+            ][0 : self.max_dict_size[dict_idx]]
+
     def _generate_hierarchy_label(self):
-        """Generate hierarchy label, used in HMCN
-        """
+        """Generate hierarchy label, used in HMCN"""
         label_dict_idx = self.dict_names.index(self.DOC_LABEL)
         label_dict = self.count_list[label_dict_idx]
         hierarchy_dict = dict()
@@ -270,39 +272,40 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
             self.hierarchy_classes.append(len(level_dict))
             for label in level_dict:
                 self.count_list[label_dict_idx].append(label)
-    
+
     def _clear_dict(self):
-        """Clear all dict
-        """
+        """Clear all dict"""
         for dict_map in self.dicts:
             dict_map.clear()
         for id_to_vocab_dict in self.id_to_vocab_dict_list:
             id_to_vocab_dict.clear()
 
     def _print_dict_info(self, count_list=False):
-        """Print dict info
-        """
+        """Print dict info"""
         for i, dict_name in enumerate(self.dict_names):
             if count_list:
                 self.logger.info(
-                    "Size of %s dict is %d" % (
-                        dict_name, len(self.count_list[i])))
+                    "Size of %s dict is %d" % (dict_name, len(self.count_list[i]))
+                )
             else:
                 self.logger.info(
-                    "Size of %s dict is %d" % (dict_name, len(self.dicts[i])))
+                    "Size of %s dict is %d" % (dict_name, len(self.dicts[i]))
+                )
 
-    def _insert_sequence_tokens(self, sequence_tokens, token_map,
-                                token_ngram_map, char_map, ngram=0):
+    def _insert_sequence_tokens(
+        self, sequence_tokens, token_map, token_ngram_map, char_map, ngram=0
+    ):
         for token in sequence_tokens:
             for char in token:
                 self._add_vocab_to_dict(char_map, char)
             self._add_vocab_to_dict(token_map, token)
         if ngram > 1:
             for j in range(2, ngram + 1):
-                for token_ngram in ["".join(sequence_tokens[k:k + j]) for k in
-                                    range(len(sequence_tokens) - j + 1)]:
-                    self._add_vocab_to_dict(token_ngram_map,
-                                            token_ngram)
+                for token_ngram in [
+                    "".join(sequence_tokens[k : k + j])
+                    for k in range(len(sequence_tokens) - j + 1)
+                ]:
+                    self._add_vocab_to_dict(token_ngram_map, token_ngram)
 
     def _insert_sequence_vocab(self, sequence_vocabs, dict_map):
         for vocab in sequence_vocabs:
@@ -315,8 +318,7 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
         dict_map[vocab] += 1
 
     def _get_vocab_id_list(self, json_obj):
-        """Use dict to convert all vocabs to ids
-        """
+        """Use dict to convert all vocabs to ids"""
         return json_obj
 
     def _label_to_id(self, sequence_labels, dict_map):
@@ -333,11 +335,17 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
 
         return label_id_list
 
-    def _token_to_id(self, sequence_tokens, token_map, char_map, ngram=0,
-                     token_ngram_map=None, max_char_sequence_length=-1,
-                     max_char_length_per_token=-1):
-        """Convert token to id. Vocab not in dict map will be map to _UNK
-        """
+    def _token_to_id(
+        self,
+        sequence_tokens,
+        token_map,
+        char_map,
+        ngram=0,
+        token_ngram_map=None,
+        max_char_sequence_length=-1,
+        max_char_length_per_token=-1,
+    ):
+        """Convert token to id. Vocab not in dict map will be map to _UNK"""
         token_id_list = []
         char_id_list = []
         char_in_token_id_list = []
@@ -345,19 +353,23 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
         for token in sequence_tokens:
             char_id = [char_map.get(x, self.VOCAB_UNKNOWN) for x in token]
             char_id_list.extend(char_id[0:max_char_sequence_length])
-            char_in_token = [char_map.get(x, self.VOCAB_UNKNOWN)
-                             for x in token[0:max_char_length_per_token]]
+            char_in_token = [
+                char_map.get(x, self.VOCAB_UNKNOWN)
+                for x in token[0:max_char_length_per_token]
+            ]
             char_in_token_id_list.append(char_in_token)
 
-            token_id_list.append(
-                token_map.get(token, token_map[self.VOCAB_UNKNOWN]))
+            token_id_list.append(token_map.get(token, token_map[self.VOCAB_UNKNOWN]))
         if ngram > 1:
             for j in range(2, ngram + 1):
                 ngram_id_list.extend(
-                    token_ngram_map[x] for x in
-                    ["".join(sequence_tokens[k:k + j]) for k in
-                     range(len(sequence_tokens) - j + 1)] if x in
-                    token_ngram_map)
+                    token_ngram_map[x]
+                    for x in [
+                        "".join(sequence_tokens[k : k + j])
+                        for k in range(len(sequence_tokens) - j + 1)
+                    ]
+                    if x in token_ngram_map
+                )
         if not sequence_tokens:
             token_id_list.append(self.VOCAB_PADDING)
             char_id_list.append(self.VOCAB_PADDING)
@@ -367,10 +379,8 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
         return token_id_list, char_id_list, char_in_token_id_list, ngram_id_list
 
     def _vocab_to_id(self, sequence_vocabs, dict_map):
-        """Convert vocab to id. Vocab not in dict map will be map to _UNK
-        """
-        vocab_id_list = \
-            [dict_map.get(x, self.VOCAB_UNKNOWN) for x in sequence_vocabs]
+        """Convert vocab to id. Vocab not in dict map will be map to _UNK"""
+        vocab_id_list = [dict_map.get(x, self.VOCAB_UNKNOWN) for x in sequence_vocabs]
         if not vocab_id_list:
             vocab_id_list.append(self.VOCAB_PADDING)
         return vocab_id_list

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#coding:utf-8
+# coding:utf-8
 """
 Tencent is pleased to support the open source community by making NeuralClassifier available.
 Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -12,7 +12,6 @@ or implied. See the License for thespecific language governing permissions and l
 the License.
 """
 
-"""Collator for NeuralClassifier"""
 
 import torch
 
@@ -60,8 +59,9 @@ class ClassificationCollator(Collator):
         """
         batch_size = len(doc_labels)
         max_label_num = max([len(x) for x in doc_labels])
-        doc_labels_extend = \
-            [[doc_labels[i][0] for x in range(max_label_num)] for i in range(batch_size)]
+        doc_labels_extend = [
+            [doc_labels[i][0] for x in range(max_label_num)] for i in range(batch_size)
+        ]
         for i in range(0, batch_size):
             doc_labels_extend[i][0 : len(doc_labels[i])] = doc_labels[i]
         y = torch.Tensor(doc_labels_extend).long()
@@ -77,8 +77,9 @@ class ClassificationCollator(Collator):
         else:
             raise TypeError(
                 "Unsupported classification type: %s. Supported "
-                "classification type is: %s" %
-                (self.classification_type, ClassificationType.str()))
+                "classification type is: %s"
+                % (self.classification_type, ClassificationType.str())
+            )
 
     def __call__(self, batch):
         def _append_vocab(ori_vocabs, vocabs, max_len):
@@ -100,31 +101,29 @@ class ClassificationCollator(Collator):
         doc_char_in_token_max_len = 0
 
         for _, value in enumerate(batch):
-            doc_token_max_len = max(doc_token_max_len,
-                                    len(value[cDataset.DOC_TOKEN]))
-            doc_char_max_len = max(doc_char_max_len,
-                                   len(value[cDataset.DOC_CHAR]))
+            doc_token_max_len = max(doc_token_max_len, len(value[cDataset.DOC_TOKEN]))
+            doc_char_max_len = max(doc_char_max_len, len(value[cDataset.DOC_CHAR]))
             for char_in_token in value[cDataset.DOC_CHAR_IN_TOKEN]:
-                doc_char_in_token_max_len = max(doc_char_in_token_max_len,
-                                                len(char_in_token))
+                doc_char_in_token_max_len = max(
+                    doc_char_in_token_max_len, len(char_in_token)
+                )
 
         for _, value in enumerate(batch):
             self._append_label(doc_labels, value)
-            _append_vocab(value[cDataset.DOC_TOKEN], doc_token,
-                          doc_token_max_len)
+            _append_vocab(value[cDataset.DOC_TOKEN], doc_token, doc_token_max_len)
             doc_token_len.append(len(value[cDataset.DOC_TOKEN]))
             _append_vocab(value[cDataset.DOC_CHAR], doc_char, doc_char_max_len)
             doc_char_len.append(len(value[cDataset.DOC_CHAR]))
 
             doc_char_in_token_len_tmp = []
             for char_in_token in value[cDataset.DOC_CHAR_IN_TOKEN]:
-                _append_vocab(char_in_token, doc_char_in_token,
-                              doc_char_in_token_max_len)
+                _append_vocab(
+                    char_in_token, doc_char_in_token, doc_char_in_token_max_len
+                )
                 doc_char_in_token_len_tmp.append(len(char_in_token))
 
             padding = [cDataset.VOCAB_PADDING] * doc_char_in_token_max_len
-            for _ in range(
-                    len(value[cDataset.DOC_CHAR_IN_TOKEN]), doc_token_max_len):
+            for _ in range(len(value[cDataset.DOC_CHAR_IN_TOKEN]), doc_token_max_len):
                 doc_char_in_token.append(padding)
                 doc_char_in_token_len_tmp.append(0)
             doc_char_in_token_len.append(doc_char_in_token_len_tmp)
@@ -139,29 +138,28 @@ class ClassificationCollator(Collator):
         batch_map = {
             cDataset.DOC_LABEL: tensor_doc_labels,
             cDataset.DOC_LABEL_LIST: doc_label_list,
-
             cDataset.DOC_TOKEN: torch.tensor(doc_token),
             cDataset.DOC_CHAR: torch.tensor(doc_char),
             cDataset.DOC_CHAR_IN_TOKEN: torch.tensor(doc_char_in_token),
-
             cDataset.DOC_TOKEN_MASK: torch.tensor(doc_token).gt(0).float(),
             cDataset.DOC_CHAR_MASK: torch.tensor(doc_char).gt(0).float(),
-            cDataset.DOC_CHAR_IN_TOKEN_MASK:
-                torch.tensor(doc_char_in_token).gt(0).float(),
-
-            cDataset.DOC_TOKEN_LEN: torch.tensor(
-                doc_token_len, dtype=torch.float32),
-            cDataset.DOC_CHAR_LEN: torch.tensor(
-                doc_char_len, dtype=torch.float32),
+            cDataset.DOC_CHAR_IN_TOKEN_MASK: torch.tensor(doc_char_in_token)
+            .gt(0)
+            .float(),
+            cDataset.DOC_TOKEN_LEN: torch.tensor(doc_token_len, dtype=torch.float32),
+            cDataset.DOC_CHAR_LEN: torch.tensor(doc_char_len, dtype=torch.float32),
             cDataset.DOC_CHAR_IN_TOKEN_LEN: torch.tensor(
-                doc_char_in_token_len, dtype=torch.float32),
-
-            cDataset.DOC_TOKEN_MAX_LEN:
-                torch.tensor([doc_token_max_len], dtype=torch.float32),
-            cDataset.DOC_CHAR_MAX_LEN:
-                torch.tensor([doc_char_max_len], dtype=torch.float32),
-            cDataset.DOC_CHAR_IN_TOKEN_MAX_LEN:
-                torch.tensor([doc_char_in_token_max_len], dtype=torch.float32)
+                doc_char_in_token_len, dtype=torch.float32
+            ),
+            cDataset.DOC_TOKEN_MAX_LEN: torch.tensor(
+                [doc_token_max_len], dtype=torch.float32
+            ),
+            cDataset.DOC_CHAR_MAX_LEN: torch.tensor(
+                [doc_char_max_len], dtype=torch.float32
+            ),
+            cDataset.DOC_CHAR_IN_TOKEN_MAX_LEN: torch.tensor(
+                [doc_char_in_token_max_len], dtype=torch.float32
+            ),
         }
         return batch_map
 
@@ -170,10 +168,12 @@ class FastTextCollator(ClassificationCollator):
     """FastText Collator
     Extra support features: token, token-ngrams, keywords, topics.
     """
+
     def __call__(self, batch):
         def _append_vocab(sample, vocabs, offsets, lens, name):
-            filtered_vocab = [x for x in sample[name] if
-                              x is not cDataset.VOCAB_UNKNOWN]
+            filtered_vocab = [
+                x for x in sample[name] if x is not cDataset.VOCAB_UNKNOWN
+            ]
             vocabs.extend(filtered_vocab)
             offsets.append(offsets[-1] + len(filtered_vocab))
             lens.append(len(filtered_vocab))
@@ -196,16 +196,26 @@ class FastTextCollator(ClassificationCollator):
         doc_topics_len = []
         for _, value in enumerate(batch):
             self._append_label(doc_labels, value)
-            _append_vocab(value, doc_tokens, doc_tokens_offset,
-                          doc_tokens_len,
-                          cDataset.DOC_TOKEN)
-            _append_vocab(value, doc_token_ngrams, doc_token_ngrams_offset,
-                          doc_token_ngrams_len,
-                          cDataset.DOC_TOKEN_NGRAM)
-            _append_vocab(value, doc_keywords, doc_keywords_offset,
-                          doc_keywords_len, cDataset.DOC_KEYWORD)
-            _append_vocab(value, doc_topics, doc_topics_offset,
-                          doc_topics_len, cDataset.DOC_TOPIC)
+            _append_vocab(
+                value, doc_tokens, doc_tokens_offset, doc_tokens_len, cDataset.DOC_TOKEN
+            )
+            _append_vocab(
+                value,
+                doc_token_ngrams,
+                doc_token_ngrams_offset,
+                doc_token_ngrams_len,
+                cDataset.DOC_TOKEN_NGRAM,
+            )
+            _append_vocab(
+                value,
+                doc_keywords,
+                doc_keywords_offset,
+                doc_keywords_len,
+                cDataset.DOC_KEYWORD,
+            )
+            _append_vocab(
+                value, doc_topics, doc_topics_offset, doc_topics_len, cDataset.DOC_TOPIC
+            )
         doc_tokens_offset.pop()
         doc_token_ngrams_offset.pop()
         doc_keywords_offset.pop()
@@ -221,24 +231,21 @@ class FastTextCollator(ClassificationCollator):
         batch_map = {
             cDataset.DOC_LABEL: tensor_doc_labels,
             cDataset.DOC_LABEL_LIST: doc_label_list,
-
             cDataset.DOC_TOKEN: torch.tensor(doc_tokens),
             cDataset.DOC_TOKEN_NGRAM: torch.tensor(doc_token_ngrams),
             cDataset.DOC_KEYWORD: torch.tensor(doc_keywords),
             cDataset.DOC_TOPIC: torch.tensor(doc_topics),
-
             cDataset.DOC_TOKEN_OFFSET: torch.tensor(doc_tokens_offset),
-            cDataset.DOC_TOKEN_NGRAM_OFFSET:
-                torch.tensor(doc_token_ngrams_offset),
+            cDataset.DOC_TOKEN_NGRAM_OFFSET: torch.tensor(doc_token_ngrams_offset),
             cDataset.DOC_KEYWORD_OFFSET: torch.tensor(doc_keywords_offset),
             cDataset.DOC_TOPIC_OFFSET: torch.tensor(doc_topics_offset),
-
-            cDataset.DOC_TOKEN_LEN:
-                torch.tensor(doc_tokens_len, dtype=torch.float32),
-            cDataset.DOC_TOKEN_NGRAM_LEN:
-                torch.tensor(doc_token_ngrams_len, dtype=torch.float32),
-            cDataset.DOC_KEYWORD_LEN:
-                torch.tensor(doc_keywords_len, dtype=torch.float32),
-            cDataset.DOC_TOPIC_LEN:
-                torch.tensor(doc_topics_len, dtype=torch.float32)}
+            cDataset.DOC_TOKEN_LEN: torch.tensor(doc_tokens_len, dtype=torch.float32),
+            cDataset.DOC_TOKEN_NGRAM_LEN: torch.tensor(
+                doc_token_ngrams_len, dtype=torch.float32
+            ),
+            cDataset.DOC_KEYWORD_LEN: torch.tensor(
+                doc_keywords_len, dtype=torch.float32
+            ),
+            cDataset.DOC_TOPIC_LEN: torch.tensor(doc_topics_len, dtype=torch.float32),
+        }
         return batch_map
