@@ -109,7 +109,7 @@ class HMCN(Classifier):
             )
             length = batch[cDataset.DOC_CHAR_LEN].to(self.config.device)
 
-        output, last_hidden = self.rnn(embedding, length)
+        output, last_hidden = self.rnn(embedding, length.cpu())
         doc_embedding = torch.sum(output, 1) / length.unsqueeze(1)
         local_layer_outputs = []
         global_layer_activation = doc_embedding

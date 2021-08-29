@@ -18,9 +18,9 @@ from util import Type
 
 
 class RNNType(Type):
-    RNN = 'RNN'
-    LSTM = 'LSTM'
-    GRU = 'GRU'
+    RNN = "RNN"
+    LSTM = "LSTM"
+    GRU = "GRU"
 
     @classmethod
     def str(cls):
@@ -32,9 +32,18 @@ class RNN(torch.nn.Module):
     One layer rnn.
     """
 
-    def __init__(self, input_size, hidden_size, num_layers=1,
-                 nonlinearity="tanh", bias=True, batch_first=False, dropout=0,
-                 bidirectional=False, rnn_type=RNNType.GRU):
+    def __init__(
+        self,
+        input_size,
+        hidden_size,
+        num_layers=1,
+        nonlinearity="tanh",
+        bias=True,
+        batch_first=False,
+        dropout=0,
+        bidirectional=False,
+        rnn_type=RNNType.GRU,
+    ):
         super(RNN, self).__init__()
         self.rnn_type = rnn_type
         self.num_layers = num_layers
@@ -42,26 +51,41 @@ class RNN(torch.nn.Module):
         self.bidirectional = bidirectional
         if rnn_type == RNNType.LSTM:
             self.rnn = torch.nn.LSTM(
-                input_size, hidden_size, num_layers=num_layers, bias=bias,
-                batch_first=batch_first, dropout=dropout,
-                bidirectional=bidirectional)
+                input_size,
+                hidden_size,
+                num_layers=num_layers,
+                bias=bias,
+                batch_first=batch_first,
+                dropout=dropout,
+                bidirectional=bidirectional,
+            )
         elif rnn_type == RNNType.GRU:
             self.rnn = torch.nn.GRU(
-                input_size, hidden_size, num_layers=num_layers, bias=bias,
-                batch_first=batch_first, dropout=dropout,
-                bidirectional=bidirectional)
+                input_size,
+                hidden_size,
+                num_layers=num_layers,
+                bias=bias,
+                batch_first=batch_first,
+                dropout=dropout,
+                bidirectional=bidirectional,
+            )
         elif rnn_type == RNNType.RNN:
             self.rnn = torch.nn.RNN(
-                input_size, hidden_size, vnonlinearity=nonlinearity, bias=bias,
-                batch_first=batch_first, dropout=dropout,
-                bidirectional=bidirectional)
+                input_size,
+                hidden_size,
+                vnonlinearity=nonlinearity,
+                bias=bias,
+                batch_first=batch_first,
+                dropout=dropout,
+                bidirectional=bidirectional,
+            )
         else:
             raise TypeError(
-                "Unsupported rnn init type: %s. Supported rnn type is: %s" % (
-                    rnn_type, RNNType.str()))
+                "Unsupported rnn init type: %s. Supported rnn type is: %s"
+                % (rnn_type, RNNType.str())
+            )
 
-    def forward(self, inputs, seq_lengths=None, init_state=None,
-                ori_state=False):
+    def forward(self, inputs, seq_lengths=None, init_state=None, ori_state=False):
         """
         Args:
             inputs:
@@ -73,14 +97,14 @@ class RNN(torch.nn.Module):
         """
         if seq_lengths is not None:
             seq_lengths = seq_lengths.int()
-            sorted_seq_lengths, indices = torch.sort(seq_lengths,
-                                                     descending=True)
+            sorted_seq_lengths, indices = torch.sort(seq_lengths, descending=True)
             if self.batch_first:
                 sorted_inputs = inputs[indices]
             else:
                 sorted_inputs = inputs[:, indices]
             packed_inputs = torch.nn.utils.rnn.pack_padded_sequence(
-                sorted_inputs, sorted_seq_lengths, batch_first=self.batch_first)
+                sorted_inputs, sorted_seq_lengths, batch_first=self.batch_first
+            )
             outputs, state = self.rnn(packed_inputs, init_state)
         else:
             outputs, state = self.rnn(inputs, init_state)
@@ -90,17 +114,17 @@ class RNN(torch.nn.Module):
         if self.rnn_type == RNNType.LSTM:
             state = state[0]
         if self.bidirectional:
-            last_layers_hn = state[2 * (self.num_layers - 1):]
-            last_layers_hn = torch.cat(
-                (last_layers_hn[0], last_layers_hn[1]), 1)
+            last_layers_hn = state[2 * (self.num_layers - 1) :]
+            last_layers_hn = torch.cat((last_layers_hn[0], last_layers_hn[1]), 1)
         else:
-            last_layers_hn = state[self.num_layers - 1:]
+            last_layers_hn = state[self.num_layers - 1 :]
             last_layers_hn = last_layers_hn[0]
 
         _, revert_indices = torch.sort(indices, descending=False)
         last_layers_hn = last_layers_hn[revert_indices]
         pad_output, _ = torch.nn.utils.rnn.pad_packed_sequence(
-            outputs, batch_first=self.batch_first)
+            outputs, batch_first=self.batch_first
+        )
         if self.batch_first:
             pad_output = pad_output[revert_indices]
         else:
