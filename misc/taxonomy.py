@@ -59,6 +59,44 @@ def generate_taxonomy(keywords: List[List[str]], outpath: str) -> None:
             f.write("\n")
 
 
+def build_trie(keywords) -> dict:
+    """
+    This generates a dictionary with:
+        - key as a parent node string
+        - value as a list of its immediate children
+    """
+    keywords_processed = []
+    for kws in keywords:
+        kws = process_single_kws(kws)
+        keywords_processed.append(kws)
+    keywords = keywords_processed
+    roots = get_levels(keywords, level=0)
+    trie = {}
+    trie["Root"] = roots
+
+    for kws in keywords:
+        for parent, child in zip(kws, kws[1:]):
+            if parent not in trie:
+                trie[parent] = [child]
+            elif parent in trie and child not in trie[parent]:
+                trie[parent].append(child)
+    return dict(trie)
+
+
+def generate_taxonomy_new(keywords: List[List[str]], outpath: str) -> None:
+    trie = build_trie(keywords)
+    logger.debug(f"[Ntrie = {len(trie)}]")
+    roots = trie.get("Root", [])
+    logger.debug(f"[Nroots = {len(roots)}] == {roots}")
+    if not roots:
+        raise ValueError("No root nodes found. Terminating!")
+    logger.info(f"Writing the custom taxonomy to {outpath}")
+    with open(outpath, "w") as f:
+        for node, children in trie.items():
+            f.write("\t".join([node] + children))
+            f.write("\n")
+
+
 def main():
     pass
 

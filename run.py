@@ -36,7 +36,8 @@ def main():
     logfile = os.path.join(outdir, "log.txt")
 
     keywords = taxonomy.load_keywords(kw_path)
-    taxonomy.generate_taxonomy(keywords, taxonomy_path)
+    # taxonomy.generate_taxonomy(keywords, taxonomy_path)
+    taxonomy.generate_taxonomy_new(keywords, taxonomy_path)
 
     df = datatools.load_data(data_path)
     df = datatools.standardize_data(df)
