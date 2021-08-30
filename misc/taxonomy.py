@@ -52,10 +52,10 @@ def generate_taxonomy(keywords: List[List[str]], outpath: str) -> None:
     logger.debug(f"[Nroots = {len(roots)}] == {roots}")
     logger.info(f"Writing the custom taxonomy to {outpath}")
     with open(outpath, "w") as f:
-        f.write(" ".join(roots))
+        f.write("\t".join(roots))
         f.write("\n")
         for kws in keywords:
-            f.write(" ".join(kws))
+            f.write("\t".join(kws))
             f.write("\n")
 
 
