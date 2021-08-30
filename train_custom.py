@@ -41,7 +41,10 @@ from model.classification.textrnn import TextRNN
 from model.classification.textvdcnn import TextVDCNN
 from model.classification.transformer import Transformer
 from model.loss import ClassificationLoss
-from model.model_util import get_hierar_relations, get_optimizer
+from model.model_util import (
+    get_hierar_relations_new as get_hierar_relations,  # get_hierar_relations,
+)
+from model.model_util import get_optimizer
 from util import ModeType
 
 ClassificationDataset, ClassificationCollator, FastTextCollator, ClassificationLoss, cEvaluator
