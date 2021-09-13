@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from typing import List
+
 import os
 
 from loguru import logger
@@ -7,6 +9,9 @@ from sklearn.model_selection import train_test_split
 
 from misc import cfg, datatools, taxonomy, utils
 
+def tokenizer(text: str) -> List[str]:
+    tokens = map(str.lower, text.split())
+    return list(tokens)
 
 def main():
     kw_path = "data/earth-science/keywords.txt"
@@ -40,7 +45,8 @@ def main():
     taxonomy.generate_taxonomy_new(keywords, taxonomy_path)
 
     df = datatools.load_data(data_path)
-    df = datatools.standardize_data(df)
+    #df = datatools.standardize_data(df, tokenizer)
+    df = datatools.standardize_data(df, tokenizer)
     logger.debug(df.head())
     logger.debug(df.iloc[0])
     logger.debug(df.iloc[0]["labels_tokenized"])
@@ -66,10 +72,12 @@ def main():
             "taxonomy": taxonomy_path,
             "checkpoint_dir": checkpoint_dir,
             "model": "Transformer",
+            #"model": "HMCN",
+            #"model": "TextRNN",
             "batch_size": 64,
             "num_epochs": 50,
             "dict_dir": dict_dir,
-            "device": "cpu",
+            "device": "cuda",
             "logfile": logfile,
         },
         cfgpath=cfgpath,
